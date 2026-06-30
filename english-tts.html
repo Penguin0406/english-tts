@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>English TTS</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231a1209'/><text x='16' y='23' font-size='20' text-anchor='middle' font-family='Georgia,serif' fill='%23b8860b' font-style='italic'>E</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1209;
+    --parchment: #f5f0e8;
+    --gold: #b8860b;
+    --gold-light: #d4a843;
+    --gold-pale: #f0e6c8;
+    --rust: #8b3a2a;
+    --cream: #faf7f0;
+    --shadow: rgba(26,18,9,0.12);
+    --border: rgba(184,134,11,0.3);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--parchment);
+    color: var(--ink);
+    font-family: 'IBM Plex Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 24px 80px;
+    background-image:
+      radial-gradient(ellipse at 20% 10%, rgba(184,134,11,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 90%, rgba(139,58,42,0.05) 0%, transparent 60%);
+  }
+
+  .masthead { text-align: center; margin-bottom: 48px; animation: fadeDown 0.8s ease both; }
+  .masthead-rule { display: flex; align-items: center; gap: 16px; margin-bottom: 10px; justify-content: center; }
+  .rule-line { width: 60px; height: 1px; background: linear-gradient(to right, transparent, var(--gold)); }
+  .rule-line.right { background: linear-gradient(to left, transparent, var(--gold)); }
+  .rule-diamond { width: 6px; height: 6px; background: var(--gold); transform: rotate(45deg); }
+
+  h1 {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    line-height: 1.1;
+  }
+  h1 em { font-style: normal; color: var(--gold); }
+
+  .subtitle {
+    margin-top: 10px;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    opacity: 0.8;
+  }
+
+  .card {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    width: 100%;
+    max-width: 680px;
+    padding: 36px 40px;
+    box-shadow: 0 4px 32px var(--shadow), inset 0 1px 0 rgba(255,255,255,0.8);
+    animation: fadeUp 0.8s 0.15s ease both;
+    margin-bottom: 24px;
+  }
+
+  .section-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .api-row { display: flex; gap: 10px; margin-bottom: 8px; }
+
+  input[type="password"] {
+    flex: 1;
+    background: var(--parchment);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 10px 14px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input[type="password"]:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(184,134,11,0.1); }
+  input::placeholder { color: rgba(26,18,9,0.35); }
+
+  .btn-save {
+    background: var(--ink);
+    color: var(--gold-pale);
+    border: none;
+    border-radius: 2px;
+    padding: 10px 18px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    white-space: nowrap;
+  }
+  .btn-save:hover { background: #2d2418; }
+  .btn-save:active { transform: scale(0.98); }
+
+  .key-status { font-size: 0.7rem; margin-top: 6px; margin-bottom: 0; height: 16px; transition: color 0.3s; }
+  .key-status.ok { color: #5a7a3a; }
+  .key-status.err { color: var(--rust); }
+
+  textarea {
+    width: 100%;
+    background: var(--parchment);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 16px 18px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--ink);
+    resize: vertical;
+    min-height: 120px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    margin-bottom: 24px;
+  }
+  textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(184,134,11,0.1); }
+  textarea::placeholder { color: rgba(26,18,9,0.3); font-style: italic; }
+
+  .controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .control-group label {
+    display: block;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+
+  select {
+    width: 100%;
+    background: var(--parchment);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 8px 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--ink);
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23b8860b'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    transition: border-color 0.2s;
+  }
+  select:focus { border-color: var(--gold); }
+
+  .speed-display { font-size: 0.9rem; color: var(--gold); float: right; }
+
+  input[type="range"] {
+    width: 100%;
+    height: 3px;
+    -webkit-appearance: none;
+    background: linear-gradient(to right, var(--gold) 0%, var(--gold) var(--pct, 50%), var(--border) var(--pct, 50%));
+    border-radius: 2px;
+    outline: none;
+    margin-top: 10px;
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    background: var(--ink);
+    border: 2px solid var(--gold);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.3); }
+
+  .error-box {
+    display: none;
+    background: rgba(139,58,42,0.08);
+    border: 1px solid rgba(139,58,42,0.25);
+    border-radius: 2px;
+    padding: 12px 16px;
+    font-size: 0.78rem;
+    color: var(--rust);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+  .error-box.visible { display: block; }
+
+  .btn-generate {
+    width: 100%;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 50%, var(--gold) 100%);
+    background-size: 200% 100%;
+    color: var(--ink);
+    border: none;
+    border-radius: 2px;
+    padding: 15px 24px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-position 0.4s, transform 0.1s, box-shadow 0.2s;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-generate:hover { background-position: 100% 0; box-shadow: 0 4px 20px rgba(184,134,11,0.35); }
+  .btn-generate:active { transform: scale(0.99); }
+  .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .btn-generate .spinner { display: none; width: 16px; height: 16px; border: 2px solid rgba(26,18,9,0.2); border-top-color: var(--ink); border-radius: 50%; animation: spin 0.6s linear infinite; }
+  .btn-generate.loading .btn-text { display: none; }
+  .btn-generate.loading .spinner { display: block; }
+
+  .player {
+    display: none;
+    background: var(--gold-pale);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 20px 22px;
+    animation: fadeUp 0.4s ease both;
+  }
+  .player.visible { display: block; }
+
+  .player-text-preview {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.9rem;
+    color: rgba(26,18,9,0.6);
+    margin-bottom: 14px;
+    line-height: 1.5;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  audio { width: 100%; height: 36px; outline: none; margin-bottom: 14px; }
+
+  .player-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+  .btn-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--ink);
+    color: var(--gold-pale);
+    border: none;
+    border-radius: 2px;
+    padding: 9px 16px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s;
+  }
+  .btn-download:hover { background: #2d2418; }
+
+  .history-count { font-size: 0.68rem; color: rgba(26,18,9,0.45); letter-spacing: 0.08em; margin-left: auto; }
+
+  .history-section { width: 100%; max-width: 680px; margin-top: 8px; }
+  .history-header { font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+  .history-header::before, .history-header::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .history-item { background: var(--cream); border: 1px solid var(--border); border-radius: 2px; padding: 14px 18px; margin-bottom: 8px; display: flex; align-items: center; gap: 14px; transition: border-color 0.2s; }
+  .history-item:hover { border-color: var(--gold); }
+  .history-item-text { flex: 1; font-family: 'IBM Plex Sans', sans-serif; font-size: 0.87rem; color: rgba(26,18,9,0.7); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .history-item-meta { font-size: 0.65rem; color: rgba(26,18,9,0.35); letter-spacing: 0.05em; white-space: nowrap; }
+
+  .btn-play-history { background: none; border: 1px solid var(--border); border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: background 0.2s, border-color 0.2s; color: var(--gold); }
+  .btn-play-history:hover { background: var(--gold-pale); border-color: var(--gold); }
+
+  .footer { margin-top: 56px; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(26,18,9,0.3); text-align: center; }
+
+  @keyframes fadeDown { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: none; } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 500px) {
+    .card { padding: 24px 20px; }
+    .controls { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="masthead-rule">
+    <div class="rule-line"></div>
+    <div class="rule-diamond"></div>
+    <div class="rule-line right"></div>
+  </div>
+  <h1>The <em>Voice</em> English</h1>
+  <p class="subtitle">English TTS · 英语发音工具</p>
+</div>
+
+<!-- API Key -->
+<div class="card">
+  <div class="section-label">API Key（AiHubMix）</div>
+  <div class="api-row">
+    <input type="password" id="apiKey" placeholder="sk-..." autocomplete="off">
+    <button class="btn-save" onclick="saveKey()">保存</button>
+  </div>
+  <div class="key-status" id="keyStatus"></div>
+</div>
+
+<!-- TTS card -->
+<div class="card">
+  <div class="section-label">English Text</div>
+  <textarea id="textInput" placeholder="Enter English text here…&#10;e.g. It feels like 2027 is still so far away, but honestly, we're already almost halfway through 2026." rows="5"></textarea>
+
+  <div class="controls">
+    <div class="control-group">
+      <label>声音</label>
+      <select id="voiceSelect">
+        <option value="alloy">Alloy</option>
+        <option value="ash">Ash</option>
+        <option value="ballad">Ballad</option>
+        <option value="coral">Coral</option>
+        <option value="echo">Echo</option>
+        <option value="fable">Fable</option>
+        <option value="nova">Nova</option>
+        <option value="onyx" selected>Onyx</option>
+        <option value="sage">Sage</option>
+        <option value="shimmer">Shimmer</option>
+        <option value="verse">Verse</option>
+        <option value="marin">Marin ✦</option>
+        <option value="cedar">Cedar ✦</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>模型</label>
+      <select id="modelSelect" onchange="filterVoices(this.value)">
+        <option value="gpt-4o-mini-tts" selected>gpt-4o-mini-tts</option>
+        <option value="tts-1-hd">tts-1-hd</option>
+        <option value="tts-1">tts-1</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>语速 <span class="speed-display" id="speedDisplay">1.0×</span></label>
+      <input type="range" id="speedSlider" min="0.5" max="2.0" step="0.05" value="1.0"
+        oninput="updateSpeed(this.value)">
+    </div>
+  </div>
+
+  <div class="error-box" id="errorBox"></div>
+
+  <button class="btn-generate" id="generateBtn" onclick="doGenerate()">
+    <span class="btn-text">✦ &nbsp;Generate Audio</span>
+    <div class="spinner"></div>
+  </button>
+
+  <div class="player" id="player">
+    <div class="player-text-preview" id="playerPreview"></div>
+    <audio id="audioPlayer" controls></audio>
+    <div class="player-actions">
+      <a class="btn-download" id="downloadBtn" download>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M6 1v7M3 6l3 3 3-3M1 10h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        下载 MP3
+      </a>
+      <span class="history-count" id="genCount"></span>
+    </div>
+  </div>
+</div>
+
+<!-- History -->
+<div class="history-section" id="historySection" style="display:none">
+  <div class="history-header">历史记录</div>
+  <div id="historyList"></div>
+</div>
+
+<div class="footer">AI 生成音频 · AiHubMix API</div>
+
+<script>
+  const ttsHistory = [];
+  let totalGen = 0;
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem('oai_tts_key');
+    if (saved) {
+      document.getElementById('apiKey').value = saved;
+      setKeyStatus('✓ Key 已保存', true);
+    }
+    updateSliderBg(document.getElementById('speedSlider'));
+  });
+
+  function saveKey() {
+    const key = document.getElementById('apiKey').value.trim();
+    if (!key.startsWith('sk-')) {
+      setKeyStatus('⚠ 格式不对，应以 sk- 开头', false);
+      return;
+    }
+    localStorage.setItem('oai_tts_key', key);
+    setKeyStatus('✓ Key 已保存到本地', true);
+  }
+
+  function setKeyStatus(msg, ok) {
+    const el = document.getElementById('keyStatus');
+    el.textContent = msg;
+    el.className = 'key-status ' + (ok ? 'ok' : 'err');
+  }
+
+  // Voices only supported by gpt-4o-mini-tts
+  const miniOnlyVoices = new Set(['ballad', 'verse', 'marin', 'cedar']);
+
+  function filterVoices(model) {
+    const select = document.getElementById('voiceSelect');
+    const isMini = model === 'gpt-4o-mini-tts';
+    Array.from(select.options).forEach(opt => {
+      if (miniOnlyVoices.has(opt.value)) {
+        opt.hidden = !isMini;
+        opt.disabled = !isMini;
+      }
+    });
+    // If current selection is now invalid, fall back to onyx
+    if (!isMini && miniOnlyVoices.has(select.value)) {
+      select.value = 'onyx';
+    }
+  }
+
+  function updateSpeed(val) {
+    document.getElementById('speedDisplay').textContent = parseFloat(val).toFixed(2) + '×';
+    updateSliderBg(document.getElementById('speedSlider'));
+  }
+
+  function updateSliderBg(slider) {
+    const min = parseFloat(slider.min);
+    const max = parseFloat(slider.max);
+    const val = parseFloat(slider.value);
+    const pct = ((val - min) / (max - min) * 100).toFixed(1) + '%';
+    slider.style.setProperty('--pct', pct);
+  }
+
+  function sanitizeFilename(text) {
+    return text.trim().replace(/[\\/:*?"<>|]/g, '').replace(/\s+/g, ' ').substring(0, 120).trim() || 'audio';
+  }
+
+  async function doGenerate() {
+    const key = localStorage.getItem('oai_tts_key') || document.getElementById('apiKey').value.trim();
+    const text = document.getElementById('textInput').value.trim();
+    const voice = document.getElementById('voiceSelect').value;
+    const model = document.getElementById('modelSelect').value;
+    const speed = parseFloat(document.getElementById('speedSlider').value);
+
+    document.getElementById('errorBox').classList.remove('visible');
+
+    if (!key) { showError('请先保存 API Key。'); return; }
+    if (!text) { showError('Please enter some text.'); return; }
+
+    const btn = document.getElementById('generateBtn');
+    btn.disabled = true;
+    btn.classList.add('loading');
+
+    try {
+      const response = await fetch('https://aihubmix.com/v1/audio/speech', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + key,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: model,
+          voice: voice,
+          input: text,
+          speed: speed,
+          response_format: 'mp3',
+          instructions: 'Read every single sentence completely from start to finish without skipping, summarizing, or omitting any part of the input. Speak in a clear, natural American English accent with proper intonation and rhythm. Casual and conversational tone.'
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err?.error?.message || 'HTTP ' + response.status);
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const filename = sanitizeFilename(text) + '.mp3';
+
+      document.getElementById('playerPreview').textContent = text.length > 100 ? text.substring(0, 100) + '…' : text;
+      const audio = document.getElementById('audioPlayer');
+      audio.src = url;
+      audio.load();
+      audio.play().catch(() => {});
+
+      const dlBtn = document.getElementById('downloadBtn');
+      dlBtn.href = url;
+      dlBtn.download = filename;
+
+      totalGen++;
+      document.getElementById('genCount').textContent = '本次会话已生成 ' + totalGen + ' 条';
+      document.getElementById('player').classList.add('visible');
+
+      addHistory(text, url, filename, voice, speed);
+
+    } catch (e) {
+      showError('错误：' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.classList.remove('loading');
+    }
+  }
+
+  function addHistory(text, url, filename, voice, speed) {
+    ttsHistory.unshift({ text, url, filename, voice, speed });
+    if (ttsHistory.length > 20) ttsHistory.pop();
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const section = document.getElementById('historySection');
+    const list = document.getElementById('historyList');
+    if (ttsHistory.length === 0) { section.style.display = 'none'; return; }
+    section.style.display = 'block';
+    list.innerHTML = '';
+    ttsHistory.forEach((item, i) => {
+      const div = document.createElement('div');
+      div.className = 'history-item';
+      div.innerHTML = `
+        <button class="btn-play-history" onclick="playHistory(${i})" title="播放">
+          <svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor"><path d="M0 0l10 6-10 6V0z"/></svg>
+        </button>
+        <div class="history-item-text">${escHtml(item.text)}</div>
+        <div class="history-item-meta">${item.voice} · ${item.speed}×</div>
+        <a class="btn-download" href="${item.url}" download="${escHtml(item.filename)}" style="padding:6px 10px; font-size:0.65rem;">
+          <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M6 1v7M3 6l3 3 3-3M1 10h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      `;
+      list.appendChild(div);
+    });
+  }
+
+  function playHistory(i) {
+    const item = ttsHistory[i];
+    document.getElementById('playerPreview').textContent = item.text.length > 100 ? item.text.substring(0, 100) + '…' : item.text;
+    const audio = document.getElementById('audioPlayer');
+    audio.src = item.url;
+    audio.load();
+    audio.play().catch(() => {});
+    document.getElementById('player').classList.add('visible');
+    document.getElementById('player').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('errorBox');
+    el.textContent = msg;
+    el.classList.add('visible');
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') doGenerate();
+  });
+</script>
+</body>
+</html>
